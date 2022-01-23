@@ -54,6 +54,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // called when user clicks on a card
   void playRound(GameCard selectedCard) {
     // TODO: don't allow user to click cards during the round
+    print(selectedCard.image);
 
     // discover the cards
     for (var card in _cards) {
@@ -67,16 +68,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void endRound() {
     // cover the cards after the user had the time to see the clicked card
     Timer(const Duration(seconds: 2), () {
-      // shuffle the cards at the end of the round
+      // play cover card animation
       for (var card in _cards) {
         card.coverCard();
       }
-    });
-    Timer(const Duration(milliseconds: 500), () {
-      setState(() {
-        _cards.shuffle();
+
+      // shuffle cards only at end of covering animation
+      Timer(const Duration(milliseconds: 800), () {
+        setState(() {
+          _cards.shuffle();
+        });
       });
     });
+    // Timer(const Duration(milliseconds: 2), () {
+
+    // });
   }
 
   @override
