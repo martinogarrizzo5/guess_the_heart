@@ -12,77 +12,113 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
-  late AnimationController _animationController1;
-  late AnimationController _animationController2;
-  late AnimationController _animationController3;
+class _GameScreenState extends State<GameScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _rotationAnimation;
 
-  List<GameCard> _cards = [];
+  final List<GameCard> _cards = [];
+  final List<String> _seeds = [];
   final String spadesCard = "assets/picche.jpg";
   final String heartsCard = "assets/cuori.jpg";
+  final String backCard = "assets/back.jpg";
 
   int lives = 0;
   int maxLives = 10;
   int score = 0;
   int maxRegisteredScore = 0;
+  bool isUserInteractionEnabled = true;
 
   @override
   void initState() {
     super.initState();
     lives = maxLives;
 
-    // setup animation
-    _animationController1 =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1));
+    for (int i = 0; i < 3; i++) {
+      _cards.add(GameCard(spadesCard, playRound, key: Key("card-$i")));
+      _seeds.add(spadesCard);
+    }
 
-    _cards = [
-      GameCard(spadesCard,
-          animationController: _animationController1,
-          onClick: playRound,
-          key: Key("card1")),
-      GameCard(heartsCard,
-          animationController: _animationController1,
-          onClick: playRound,
-          key: Key("card2")),
-      GameCard(spadesCard,
-          animationController: _animationController1,
-          onClick: playRound,
-          key: Key("card3"))
-    ];
+    // setup animations
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _rotationAnimation = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
+
+    _rotationAnimation.addListener(
+      () => setState(() => setSidesOfCards()),
+    );
+  }
+
+  void setSidesOfCards() {
+    if (_rotationAnimation.value < 0.5) {
+      coverCards();
+    } else {
+      revealCards(_seeds);
+    }
   }
 
   // called when user clicks on a card
-  void playRound(GameCard selectedCard) {
-    // TODO: don't allow user to click cards during the round
-    print(selectedCard.image);
+  void playRound(Key cardKey) async {
+    if (!isUserInteractionEnabled) return;
+    isUserInteractionEnabled = false;
 
-    // discover the cards
-    for (var card in _cards) {
-      card.discoverCard();
-    }
+    // select hearts card
+    int heartsCardIndex = Random().nextInt(3);
 
-    // handle round won or lost
-    endRound();
+    // update seeds
+    setState(() {
+      for (int i = 0; i < _cards.length; i++) {
+        if (heartsCardIndex == i) {
+          _seeds[i] = heartsCard;
+        } else {
+          _seeds[i] = spadesCard;
+        }
+      }
+    });
+
+    await _controller.forward();
+    handleRoundResult(cardKey, _cards[heartsCardIndex].key!);
+
+    Timer(
+      const Duration(seconds: 1),
+      () => _controller
+          .reverse()
+          .whenComplete(() => isUserInteractionEnabled = true),
+    );
   }
 
-  void endRound() {
-    // cover the cards after the user had the time to see the clicked card
-    Timer(const Duration(seconds: 2), () {
-      // play cover card animation
-      for (var card in _cards) {
-        card.coverCard();
+  void handleRoundResult(Key cardKey, Key heartsCardKey) {
+    // if round is won increment the score
+    setState(() {
+      if (cardKey == heartsCardKey) {
+        print("you won");
+        score += 250;
+      } else {
+        print("you lost");
+        lives--;
       }
-
-      // shuffle cards only at end of covering animation
-      Timer(const Duration(milliseconds: 800), () {
-        setState(() {
-          _cards.shuffle();
-        });
-      });
     });
-    // Timer(const Duration(milliseconds: 2), () {
+  }
 
-    // });
+  // update cards to their covered position
+  void coverCards() {
+    setState(() {
+      for (int i = 0; i < _cards.length; i++) {
+        _cards[i] = GameCard(backCard, playRound,
+            key: _cards[i].key, isBackShown: true);
+      }
+    });
+  }
+
+  // update cards to their revealed position
+  void revealCards(List<String> seeds) {
+    setState(() {
+      for (int i = 0; i < _cards.length; i++) {
+        _cards[i] = GameCard(seeds[i], playRound,
+            key: _cards[i].key, isBackShown: false);
+      }
+    });
   }
 
   @override
@@ -102,7 +138,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: _cards,
+                    children: _cards
+                        .map(
+                          (card) => Transform(
+                            transform: Matrix4.identity()
+                              ..setRotationY(_rotationAnimation.value * pi),
+                            alignment: FractionalOffset.center,
+                            child: card,
+                          ),
+                        )
+                        .toList(),
                   ),
                 )
               ],
