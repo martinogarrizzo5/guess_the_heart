@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import "dart:math";
 
 class GameCard extends StatelessWidget {
-  final Function(Key) onClick;
+  final Function(Key)? onClick;
   final String image;
   final bool isBackShown;
 
@@ -16,14 +16,16 @@ class GameCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => onClick(key!),
+      onTap: () {
+        if (onClick != null) onClick!(key!);
+      },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Container(
           color: Colors.white,
           padding: const EdgeInsets.all(8),
           height: MediaQuery.of(context).size.width / 3.5 * 1.6,
-          width: MediaQuery.of(context).size.width / 3.5,
+          width: min(MediaQuery.of(context).size.width / 3.5, 240),
           child: Image.asset(
             image,
             fit: BoxFit.cover,

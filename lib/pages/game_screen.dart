@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:guess_the_heart/components/game_card.dart';
 import '../components/status_bar.dart';
@@ -34,8 +33,9 @@ class _GameScreenState extends State<GameScreen>
     super.initState();
     lives = maxLives;
 
+    // setup base cards and seeds
     for (int i = 0; i < 3; i++) {
-      _cards.add(GameCard(spadesCard, playRound, key: Key("card-$i")));
+      _cards.add(GameCard(backCard, playRound, key: Key("card-$i")));
       _seeds.add(spadesCard);
     }
 
@@ -52,9 +52,9 @@ class _GameScreenState extends State<GameScreen>
 
   void setSidesOfCards() {
     if (_rotationAnimation.value < 0.5) {
-      coverCards();
+      setCardsAsCovered();
     } else {
-      revealCards(_seeds);
+      setCardsAsRevealed(_seeds);
     }
   }
 
@@ -92,17 +92,15 @@ class _GameScreenState extends State<GameScreen>
     // if round is won increment the score
     setState(() {
       if (cardKey == heartsCardKey) {
-        print("you won");
         score += 250;
       } else {
-        print("you lost");
         lives--;
       }
     });
   }
 
   // update cards to their covered position
-  void coverCards() {
+  void setCardsAsCovered() {
     setState(() {
       for (int i = 0; i < _cards.length; i++) {
         _cards[i] = GameCard(backCard, playRound,
@@ -112,7 +110,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   // update cards to their revealed position
-  void revealCards(List<String> seeds) {
+  void setCardsAsRevealed(List<String> seeds) {
     setState(() {
       for (int i = 0; i < _cards.length; i++) {
         _cards[i] = GameCard(seeds[i], playRound,
@@ -134,6 +132,7 @@ class _GameScreenState extends State<GameScreen>
                   lives: lives,
                   score: score,
                 ),
+                const SizedBox(height: 8),
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,

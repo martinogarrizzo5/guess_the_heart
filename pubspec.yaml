@@ -93,3 +93,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  fonts:
+    - family: TitanOne
+      fonts:
+        - asset: assets/TitanOne-Regular.ttf
+    - family: Ultra
+      fonts:
+        - asset: assets/Ultra-Regular.ttf
