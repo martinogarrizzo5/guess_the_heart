@@ -3,11 +3,13 @@ import "package:flutter/material.dart";
 class GameStatusBar extends StatelessWidget {
   final int lives;
   final int score;
+  final int lifeLostAlphaValue;
 
   const GameStatusBar({
     Key? key,
     required this.lives,
     required this.score,
+    required this.lifeLostAlphaValue,
   }) : super(key: key);
 
   final TextStyle gameInfoStyle =
@@ -29,6 +31,17 @@ class GameStatusBar extends StatelessWidget {
             Text(
               lives.toString(),
               style: gameInfoStyle,
+            ),
+            const SizedBox(width: 8),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 300),
+              style: TextStyle(
+                color: Colors.red.withAlpha(lifeLostAlphaValue),
+                fontSize: 20,
+              ),
+              child: const Text(
+                "-1",
+              ),
             ),
           ],
         ),

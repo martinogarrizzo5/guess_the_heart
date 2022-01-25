@@ -24,7 +24,7 @@ class GameCard extends StatelessWidget {
         child: Container(
           color: Colors.white,
           padding: const EdgeInsets.all(8),
-          height: MediaQuery.of(context).size.width / 3.5 * 1.6,
+          height: min(MediaQuery.of(context).size.width / 3.5 * 1.6, 240 * 1.6),
           width: min(MediaQuery.of(context).size.width / 3.5, 240),
           child: Image.asset(
             image,

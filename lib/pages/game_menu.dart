@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import 'package:guess_the_heart/components/game_card.dart';
+import 'package:guess_the_heart/components/main_button.dart';
 
 class GameMenu extends StatelessWidget {
   const GameMenu({Key? key}) : super(key: key);
@@ -44,57 +45,48 @@ class GameMenu extends StatelessWidget {
                 turns: AlwaysStoppedAnimation(40 / 360),
               ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  children: [
-                    Text(
-                      "Guess The Heart",
-                      style: TextStyle(
-                        fontSize: 62,
-                        fontFamily: "Ultra",
-                        fontWeight: FontWeight.bold,
-                        foreground: Paint()
-                          ..style = PaintingStyle.stroke
-                          ..strokeWidth = 12,
+            Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Stack(
+                    children: [
+                      Text(
+                        "Guess\nThe\nHeart",
+                        style: TextStyle(
+                          fontSize: 62,
+                          fontFamily: "Ultra",
+                          foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 12,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const Text(
-                      "Guess The Heart",
-                      style: TextStyle(
-                        fontSize: 62,
-                        fontFamily: "Ultra",
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      const Text(
+                        "Guess\nThe\nHeart",
+                        style: TextStyle(
+                          fontSize: 62,
+                          fontFamily: "Ultra",
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => {},
-                  child: const Text(
-                    "Play Now",
-                    style: TextStyle(
-                      fontSize: 32,
-                    ),
+                    ],
                   ),
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.orange[700],
+                  const SizedBox(height: 8),
+                  MainButton(
+                    text: "Play Now",
+                    fontSize: 32,
                     padding: const EdgeInsets.symmetric(
                       vertical: 18,
                       horizontal: 36,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                  ),
-                )
-              ],
+                    onClick: () => Navigator.of(context).pushNamed("/game"),
+                  )
+                ],
+              ),
             )
           ],
         ),

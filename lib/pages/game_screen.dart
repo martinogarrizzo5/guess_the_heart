@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:guess_the_heart/components/game_card.dart';
+import '../components/game_card.dart';
 import '../components/status_bar.dart';
+import "../components/end_game_dialog.dart";
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -13,7 +14,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late AnimationController _rotationAnimationController;
   late Animation<double> _rotationAnimation;
 
   final List<GameCard> _cards = [];
@@ -22,11 +23,15 @@ class _GameScreenState extends State<GameScreen>
   final String heartsCard = "assets/cuori.jpg";
   final String backCard = "assets/back.jpg";
 
+  bool isGameOver = false;
   int lives = 0;
-  int maxLives = 10;
+  int maxLives = 5;
   int score = 0;
   int maxRegisteredScore = 0;
   bool isUserInteractionEnabled = true;
+  final int pointsForRound = 250;
+
+  int lifeLostAlphaValue = 0;
 
   @override
   void initState() {
@@ -40,14 +45,20 @@ class _GameScreenState extends State<GameScreen>
     }
 
     // setup animations
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
-    _rotationAnimation = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
-
+    _rotationAnimationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+    _rotationAnimation = Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(
+            parent: _rotationAnimationController, curve: Curves.linear));
     _rotationAnimation.addListener(
       () => setState(() => setSidesOfCards()),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _rotationAnimationController.dispose();
   }
 
   void setSidesOfCards() {
@@ -58,15 +69,21 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
+  int selectHeartsCardIndex() {
+    int randomIndex = Random().nextInt(3);
+
+    return randomIndex;
+  }
+
   // called when user clicks on a card
   void playRound(Key cardKey) async {
-    if (!isUserInteractionEnabled) return;
+    if (!isUserInteractionEnabled || isGameOver) return;
     isUserInteractionEnabled = false;
 
     // select hearts card
-    int heartsCardIndex = Random().nextInt(3);
+    int heartsCardIndex = selectHeartsCardIndex();
 
-    // update seeds
+    // update cards seeds
     setState(() {
       for (int i = 0; i < _cards.length; i++) {
         if (heartsCardIndex == i) {
@@ -77,12 +94,16 @@ class _GameScreenState extends State<GameScreen>
       }
     });
 
-    await _controller.forward();
+    // reveal the cards
+    await _rotationAnimationController.forward();
+
+    // handle round won or lost
     handleRoundResult(cardKey, _cards[heartsCardIndex].key!);
 
+    // cover cards after one seconds
     Timer(
       const Duration(seconds: 1),
-      () => _controller
+      () => _rotationAnimationController
           .reverse()
           .whenComplete(() => isUserInteractionEnabled = true),
     );
@@ -92,9 +113,14 @@ class _GameScreenState extends State<GameScreen>
     // if round is won increment the score
     setState(() {
       if (cardKey == heartsCardKey) {
-        score += 250;
+        score += pointsForRound;
       } else {
         lives--;
+        playLifeLostAnimation();
+
+        if (lives <= 0) {
+          handleGameOver();
+        }
       }
     });
   }
@@ -119,6 +145,43 @@ class _GameScreenState extends State<GameScreen>
     });
   }
 
+  // if game is over show the end game dialog with the score
+  void handleGameOver() {
+    bool isNewRecord = score > maxRegisteredScore;
+    if (isNewRecord) {
+      maxRegisteredScore = score;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => EndGameDialog(
+        score: score,
+        maxScore: maxRegisteredScore,
+        isNewRecord: isNewRecord,
+        onPlayAgain: restartGame,
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void restartGame() {
+    // reset values to initial state
+    setState(() {
+      score = 0;
+      lives = maxLives;
+      isGameOver = false;
+      isUserInteractionEnabled = true;
+    });
+
+    // remove end game dialog
+    Navigator.of(context).pop();
+  }
+
+  void playLifeLostAnimation() {
+    lifeLostAlphaValue = 255;
+    Timer(const Duration(milliseconds: 1000), () => {lifeLostAlphaValue = 0});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,6 +194,7 @@ class _GameScreenState extends State<GameScreen>
                 GameStatusBar(
                   lives: lives,
                   score: score,
+                  lifeLostAlphaValue: lifeLostAlphaValue,
                 ),
                 const SizedBox(height: 8),
                 Expanded(
