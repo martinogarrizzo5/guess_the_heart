@@ -147,6 +147,7 @@ class _GameScreenState extends State<GameScreen>
 
   // if game is over show the end game dialog with the score
   void handleGameOver() {
+    isGameOver = true;
     bool isNewRecord = score > maxRegisteredScore;
     if (isNewRecord) {
       maxRegisteredScore = score;
